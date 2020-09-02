@@ -144,63 +144,59 @@
       "name": "[variables('networkSecurityGroupName')]",
       "location": "[parameters('location')]",
       "properties": {
-        "securityRules": [{
-          "name": "default-allow-22",
-          "properties": {
-            "priority": 1000,
-            "access": "Allow",
-            "direction": "Inbound",
-            "destinationPortRange": "22",
-            "protocol": "Tcp",
-            "sourceAddressPrefix": "*",
-            "sourcePortRange": "*",
-            "destinationAddressPrefix": "*"
+        "securityRules": [
+            {
+                "name": "SSH",
+                "properties": {
+                  "protocol": "TCP",
+                  "sourcePortRange": "*",
+                  "destinationPortRange": "22",
+                  "sourceAddressPrefix": "*",
+                  "destinationAddressPrefix": "*",
+                  "access": "Allow",
+                  "priority": 300,
+                  "direction": "Inbound",
+                  "sourcePortRanges": [],
+                  "destinationPortRanges": [],
+                  "sourceAddressPrefixes": [],
+                  "destinationAddressPrefixes": []
+              }
+            },
+            {
+              "name": "Port_8080",
+              "properties": {
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "8080",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 310,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+              }
+            },
+            {
+              "name": "Port_5000",
+              "properties": {
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "5000",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 321,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
           }
-        }]
-      }
-    },
-    {
-      "comments": "Default Network Security Group for template",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2019-08-01",
-      "name": "[variables('networkSecurityGroupName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "securityRules": [{
-          "name": "Factory_Vision_AI_Port_8080",
-          "properties": {
-            "priority": 100,
-            "access": "Allow",
-            "direction": "Inbound",
-            "destinationPortRange": "8080",
-            "protocol": "Tcp",
-            "sourceAddressPrefix": "*",
-            "sourcePortRange": "*",
-            "destinationAddressPrefix": "*"
-          }
-        }]
-      }
-    },
-    {
-      "comments": "Default Network Security Group for template",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2019-08-01",
-      "name": "[variables('networkSecurityGroupName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "securityRules": [{
-          "name": "Factory_Vision_AI_Port_5000",
-          "properties": {
-            "priority": 110,
-            "access": "Allow",
-            "direction": "Inbound",
-            "destinationPortRange": "5000",
-            "protocol": "Tcp",
-            "sourceAddressPrefix": "*",
-            "sourcePortRange": "*",
-            "destinationAddressPrefix": "*"
-          }
-        }]
+        ]
       }
     },
     {
