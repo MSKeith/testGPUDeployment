@@ -169,7 +169,7 @@
         "securityRules": [{
           "name": "Factory_Vision_AI_Port_8080",
           "properties": {
-            "priority": 1000,
+            "priority": 100,
             "access": "Allow",
             "direction": "Inbound",
             "destinationPortRange": "8080",
@@ -191,7 +191,7 @@
         "securityRules": [{
           "name": "Factory_Vision_AI_Port_5000",
           "properties": {
-            "priority": 1000,
+            "priority": 110,
             "access": "Allow",
             "direction": "Inbound",
             "destinationPortRange": "5000",
