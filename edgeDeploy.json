@@ -594,7 +594,7 @@
                         "apiVersion": "2019-03-01",
                         "location": "[parameters('location')]",
                         "dependsOn": [
-                          "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+                          "[concat('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
                         ],
                         "properties": {
                             "publisher": "Microsoft.Azure.Extensions",
