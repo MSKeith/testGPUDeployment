@@ -603,7 +603,7 @@
                             "autoUpgradeMinorVersion": true,
                             "protectedSettings": {
                                 //"commandToExecute": "[concat('export KEYVAULTNAME', '=\"', parameters('keyVaultName'), '\"')]"
-                                "commandToExecute": "[concat('\"export KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/.bash_profile')]"
+                                "commandToExecute": "[concat('\"export KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/.bashrc')]"
                             }
                         }
                     }
