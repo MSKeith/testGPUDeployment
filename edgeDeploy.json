@@ -603,7 +603,9 @@
                             "autoUpgradeMinorVersion": true,
                             "protectedSettings": {
                                 //"commandToExecute": "[concat('export KEYVAULTNAME', '=\"', parameters('keyVaultName'), '\"')]"
-                                "commandToExecute": "[concat('\"export KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/.bashrc')]"
+                                //"commandToExecute": "[concat('\"export KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/.bashrc')]"
+                                //"commandToExecute": "[concat('\"export KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/.bashrc')]",
+                                "commandToExecute": "[concat('\"sed -i $a KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/etc/environment')]"
                             }
                         }
                     }
