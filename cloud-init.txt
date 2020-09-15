@@ -46,6 +46,7 @@ runcmd:
   - wget http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_440.33.01_linux.run
   - sh cuda_10.2.89_440.33.01_linux.run --silent --driver --toolkit --samples
   - token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net' -H Metadata:true |jq --raw-output '.access_token')
+  -dcs=$(curl https://$KEYVAULTNAME.vault.azure.net/secrets/deviceConnectionString?api-version=2016-10-01 -H "Authorization: Bearer $token" |jq --raw-output '.value')
   - |
     set -x
     (
