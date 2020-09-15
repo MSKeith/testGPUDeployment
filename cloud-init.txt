@@ -45,8 +45,8 @@ runcmd:
   - pkill -SIGHUP dockerd
   - wget http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_440.33.01_linux.run
   - sh cuda_10.2.89_440.33.01_linux.run --silent --driver --toolkit --samples
-  - [token=$(curl "http%3A%2F%2F169.254.169.254%2Fmetadata%2Fidentity%2Foauth2%2Ftoken%3Fapi-version%3D2018-02-01%26resource%3Dhttps%3A%2F%2Fvault.azure.net" -H Metadata:true |jq --raw-output '.access_token')]
-  - [sh, echo $token]
+  - token=$(curl "http%3A%2F%2F169.254.169.254%2Fmetadata%2Fidentity%2Foauth2%2Ftoken%3Fapi-version%3D2018-02-01%26resource%3Dhttps%3A%2F%2Fvault.azure.net" -H Metadata:true |jq --raw-output '.access_token')
+  - sh, echo $token
   - |
     set -x
     (
