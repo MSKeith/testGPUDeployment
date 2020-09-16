@@ -6,5 +6,7 @@ ARM template to deploy a GPU enabled VM with IoT Edge pre-installed (via cloud-i
     <img src="https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.png" />
 </a>
 troubleshooting
+
 /var/log
+
 /var/lib/cloud/instance/scripts/runcmd
