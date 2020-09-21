@@ -226,7 +226,7 @@
 
         "apiVersion": "2015-06-15",
 
-        "customData": "[concat('#include\n', 'https://raw.githubusercontent.com/MSKeith/testGPUDeployment/master/cloud-init.txt')]",
+        "customData": "[concat('#include\n', 'https://raw.githubusercontent.com/MSKeith/iotedge-vm-deploy/master/cloud-init.txt')]",
 
         "linuxConfiguration": {
 
@@ -608,7 +608,7 @@
                                 //"commandToExecute": "[concat('\"export KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/.bashrc')]",
                                 //"commandToExecute": "[concat('\"sed -i $a KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> /etc/environment')]"
                                 //"commandToExecute": "[concat('echo KEYVAULTNAME', '=\", parameters('keyVaultName'), '\", '>> /etc/environment')]"
-                               "commandToExecute": "[format('echo \"export KEYVAULTNAME={0}\">>/etc/environment', parameters('keyVaultName'))]"
+                                "commandToExecute": "[format('echo \"export KEYVAULTNAME={0}\">>/etc/environment', parameters('keyVaultName'))]"
                             } 
                         }
                     }
@@ -649,7 +649,7 @@
                 }
 
             }
-          ]
+
         },
 
         {
@@ -772,4 +772,3 @@
     }
 
 }
-
