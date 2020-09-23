@@ -24,18 +24,8 @@ token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=
 echo $token
 dcs=$(curl 'https://$KEYVAULTNAME.vault.azure.net/secrets/deviceConnectionString?api-version=2016-10-01' -H "Authorization: Bearer $token")
 echo "here" $dcs
-
-    set -x
-    (
-      # Wait for docker daemon to start
-      while [ $(ps -ef | grep -v grep | grep docker | wc -l) -le 0 ]; do 
-        sleep 3
-      done
-
-      # Prevent iotedge from starting before the device connection string is set in config.yaml
-      sudo ln -s /dev/null /etc/systemd/system/iotedge.service
-      sudo apt install iotedge -y
-      sudo sed -i "s#\(device_connection_string: \).*#\1\"$dcs\"#g" /etc/iotedge/config.yaml 
-      sudo systemctl unmask iotedge
-      sudo systemctl start iotedge
-    ) &
+sudo apt install iotedge -y
+echo "installing  IoT Edge"
+sudo sed -i "s#\(device_connection_string: \).*#\1\"$dcs\"#g" /etc/iotedge/config.yaml
+sudo systemctl restart iotedge
+echo "restarting IoT Edge"
