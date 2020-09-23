@@ -1,774 +1,406 @@
 {
-
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-
     "contentVersion": "1.0.0.0",
-
     "parameters": {
-
         "dnsLabelPrefix": {
-
             "type": "string",
-
             "metadata": {
-
                 "description": "Unique DNS Name for the Storage Account where the Virtual Machine's disks will be placed."
-
             }
-
         },
-
         "adminUsername": {
-
             "type": "string",
-
             "metadata": {
-
                 "description": "User name for the Virtual Machine."
-
             }
-
         },
-
         "deviceConnectionString": {
-
             "type": "string",
-
             "metadata": {
-
                 "description": "IoT Edge Device Connection String"
-
             }
-
         },
-
         "vmSize": {
-
             "type": "string",
-
             "defaultValue": "Standard_NC6s_v3",
-
             "allowedValues": [
-
                 "Standard_NC6",
-
                 "Standard_NC12",
-
                 "Standard_NC24",
-
                 "Standard_NC24r",
-
                 "Standard_NC6_Promo",
-
                 "Standard_NC12_Promo",
-
                 "Standard_NC24_Promo",
-
                 "Standard_NC24r_Promo",
-
                 "Standard_NC6s_v2",
-
                 "Standard_NC12s_v2",
-
                 "Standard_NC24rs_v2",
-
                 "Standard_NC24s_v2",
-
                 "Standard_NC6s_v3",
-
                 "Standard_NC12s_v3",
-
                 "Standard_NC24rs_v3",
-
                 "Standard_NC24s_v3"
-
             ],
-
             "metadata": {
-
                 "description": "VM size"
-
             }
-
         },
-
         "vmName": {
-
             "type": "string",
-
             "defaultValue": "VM Name",
-
             "metadata": {
-
                 "description": "VM name"
-
             }
-
         },
-
         "ubuntuOSVersion": {
-
             "type": "string",
-
             "defaultValue": "18.04-LTS",
-
             "metadata": {
-
                 "description": "The Ubuntu version for the VM. This will pick a fully patched image of this given Ubuntu version."
-
             }
-
         },
-
         "location": {
-
             "type": "string",
-
             "defaultValue": "eastus",
-
             "allowedValues": [
-
                 "eastus",
-
                 "canadacentral",
-
                 "southcentralus",
-
                 "westus2"
-
             ],
-
             "metadata": {
-
                 "description": "Location for all resources."
-
             }
-
         },
-
         "keyVaultName": {
-
             "type": "string",
-
             "metadata": {
-
                 "description": "The name of the Key Vault to be used to securly store the Device Connection String"
-
             }
-
         },
-
         "authenticationType": {
-
             "type": "string",
-
             "defaultValue": "sshPublicKey",
-
             "allowedValues": [
-
                 "sshPublicKey",
-
                 "password"
-
             ],
-
             "metadata": {
-
                 "description": "Type of authentication to use on the Virtual Machine. SSH key is recommended."
-
             }
-
         },
-
         "adminPasswordOrKey": {
-
             "type": "securestring",
-
             "metadata": {
-
                 "description": "SSH Key or password for the Virtual Machine. SSH key is recommended."
-
             }
-
         }
-
     },
-
     "variables": {
-
         "imagePublisher": "Canonical",
-
         "imageOffer": "UbuntuServer",
-
         "nicName": "[concat('nic-', uniquestring(parameters('dnsLabelPrefix')))]",
-
         //"vmName": "[concat('vm-', uniquestring(parameters('dnsLabelPrefix')))]",
-
         "virtualNetworkName": "[concat('vnet-', uniquestring(parameters('dnsLabelPrefix')))]",
-
         "publicIPAddressName": "[concat('ip-', parameters('dnsLabelPrefix'))]",
-
         "addressPrefix": "10.0.0.0/16",
-
         "subnet1Name": "[concat('subnet-', uniquestring(parameters('dnsLabelPrefix')))]",
-
         "subnet1Prefix": "10.0.0.0/24",
-
         "vmIdentityResourceId": "[concat(resourceId('Microsoft.Compute/virtualMachines', parameters('vmName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
-
         "publicIPAddressType": "Dynamic",
-
         "storageAccountType": "Standard_LRS",
-
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
-
         "subnet1Ref": "[concat(variables('vnetID'),'/subnets/',variables('subnet1Name'))]",
-
         "apiVersion": "2015-06-15",
-
         "customData": "[concat('#include\n', 'https://raw.githubusercontent.com/MSKeith/iotedge-vm-deploy/master/cloud-init.txt')]",
-
         "linuxConfiguration": {
-
             "disablePasswordAuthentication": true,
-
             "ssh": {
-
                 "publicKeys": [
                     {
-
                         "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
-
                         "keyData": "[parameters('adminPasswordOrKey')]"
-
                     }
                 ]
-
             }
-
         },
-
         "dcs": "[parameters('deviceConnectionString')]",
-
         "networkSecurityGroupName": "[concat('nsg-', uniquestring(parameters('dnsLabelPrefix')))]"
-
     },
-
     "resources": [
         {
-
             "apiVersion": "2015-06-15",
-
             "type": "Microsoft.Network/publicIPAddresses",
-
             "name": "[variables('publicIPAddressName')]",
-
             "location": "[parameters('location')]",
-
             "properties": {
-
                 "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
-
                 "dnsSettings": {
-
                     "domainNameLabel": "[parameters('dnsLabelPrefix')]"
-
                 }
-
             }
-
         },
-
         {
-
             "comments": "Default Network Security Group for template",
-
             "type": "Microsoft.Network/networkSecurityGroups",
-
             "apiVersion": "2019-08-01",
-
             "name": "[variables('networkSecurityGroupName')]",
-
             "location": "[parameters('location')]",
-
             "properties": {
-
                 "securityRules": [
-
                     {
-
                         "name": "SSH",
-
                         "properties": {
-
                             "protocol": "TCP",
-
                             "sourcePortRange": "*",
-
                             "destinationPortRange": "22",
-
                             "sourceAddressPrefix": "*",
-
                             "destinationAddressPrefix": "*",
-
                             "access": "Allow",
-
                             "priority": 300,
-
                             "direction": "Inbound",
-
                             "sourcePortRanges": [],
-
                             "destinationPortRanges": [],
-
                             "sourceAddressPrefixes": [],
-
                             "destinationAddressPrefixes": []
-
                         }
-
                     },
-
                     {
-
                         "name": "Port_8080",
-
                         "properties": {
-
                             "protocol": "*",
-
                             "sourcePortRange": "*",
-
                             "destinationPortRange": "8080",
-
                             "sourceAddressPrefix": "*",
-
                             "destinationAddressPrefix": "*",
-
                             "access": "Allow",
-
                             "priority": 310,
-
                             "direction": "Inbound",
-
                             "sourcePortRanges": [],
-
                             "destinationPortRanges": [],
-
                             "sourceAddressPrefixes": [],
-
                             "destinationAddressPrefixes": []
-
                         }
-
                     },
-
                     {
-
                         "name": "Port_5000",
-
                         "properties": {
-
                             "protocol": "*",
-
                             "sourcePortRange": "*",
-
                             "destinationPortRange": "5000",
-
                             "sourceAddressPrefix": "*",
-
                             "destinationAddressPrefix": "*",
-
                             "access": "Allow",
-
                             "priority": 321,
-
                             "direction": "Inbound",
-
                             "sourcePortRanges": [],
-
                             "destinationPortRanges": [],
-
                             "sourceAddressPrefixes": [],
-
                             "destinationAddressPrefixes": []
-
                         }
-
                     }
-
                 ]
-
             }
-
         },
-
         {
-
             "apiVersion": "2015-06-15",
-
             "type": "Microsoft.Network/virtualNetworks",
-
             "name": "[variables('virtualNetworkName')]",
-
             "location": "[parameters('location')]",
-
             "dependsOn": [
-
                 "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
-
             ],
-
             "properties": {
-
                 "addressSpace": {
-
                     "addressPrefixes": [
-
                         "[variables('addressPrefix')]"
-
                     ]
-
                 },
-
                 "subnets": [
                     {
-
                         "name": "[variables('subnet1Name')]",
-
                         "properties": {
-
                             "addressPrefix": "[variables('subnet1Prefix')]",
-
                             "networkSecurityGroup": {
-
                                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
-
                             }
-
                         }
-
                     }
                 ]
-
             }
-
         },
-
         {
-
             "apiVersion": "2015-06-15",
-
             "type": "Microsoft.Network/networkInterfaces",
-
             "name": "[variables('nicName')]",
-
             "location": "[parameters('location')]",
-
             "dependsOn": [
-
                 "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
-
                 "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
-
             ],
-
             "properties": {
-
                 "ipConfigurations": [
                     {
-
                         "name": "ipconfig1",
-
                         "properties": {
-
                             "privateIPAllocationMethod": "Dynamic",
-
                             "publicIPAddress": {
-
                                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
-
                             },
-
                             "subnet": {
-
                                 "id": "[variables('subnet1Ref')]"
-
                             }
-
                         }
-
                     }
                 ]
-
             }
-
         },
-
         {
-
             "apiVersion": "2016-04-30-preview",
-
             "type": "Microsoft.Compute/virtualMachines",
-
             "name": "[parameters('vmName')]",
-
             "identity": {
-
                 "type": "SystemAssigned"
-
             },
-
             "location": "[parameters('location')]",
-
             "dependsOn": [
-
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
-
             ],
-
             "properties": {
-
                 "hardwareProfile": {
-
                     "vmSize": "[parameters('vmSize')]"
-
                 },
-
                 "osProfile": {
-
                     "computerName": "[parameters('vmName')]",
-
                     "adminUsername": "[parameters('adminUsername')]",
-
                     "adminPassword": "[parameters('adminPasswordOrKey')]",
-
                     "customData": "[base64(variables('customData'))]",
-
                     //"customData": "[base64(concat('#cloud-config\n\napt:\n  preserve_sources_list: true\n  sources:\n    msft.list:\n      source: \"deb https://packages.microsoft.com/ubuntu/18.04/multiarch/prod bionic main\"\n      key: |\n        -----BEGIN PGP PUBLIC KEY BLOCK-----\n        Version: GnuPG v1.4.7 (GNU/Linux)\n\n        mQENBFYxWIwBCADAKoZhZlJxGNGWzqV+1OG1xiQeoowKhssGAKvd+buXCGISZJwT\n        LXZqIcIiLP7pqdcZWtE9bSc7yBY2MalDp9Liu0KekywQ6VVX1T72NPf5Ev6x6DLV\n        7aVWsCzUAF+eb7DC9fPuFLEdxmOEYoPjzrQ7cCnSV4JQxAqhU4T6OjbvRazGl3ag\n        OeizPXmRljMtUUttHQZnRhtlzkmwIrUivbfFPD+fEoHJ1+uIdfOzZX8/oKHKLe2j\n        H632kvsNzJFlROVvGLYAk2WRcLu+RjjggixhwiB+Mu/A8Tf4V6b+YppS44q8EvVr\n        M+QvY7LNSOffSO6Slsy9oisGTdfE39nC7pVRABEBAAG0N01pY3Jvc29mdCAoUmVs\n        ZWFzZSBzaWduaW5nKSA8Z3Bnc2VjdXJpdHlAbWljcm9zb2Z0LmNvbT6JATUEEwEC\n        AB8FAlYxWIwCGwMGCwkIBwMCBBUCCAMDFgIBAh4BAheAAAoJEOs+lK2+EinPGpsH\n        /32vKy29Hg51H9dfFJMx0/a/F+5vKeCeVqimvyTM04C+XENNuSbYZ3eRPHGHFLqe\n        MNGxsfb7C7ZxEeW7J/vSzRgHxm7ZvESisUYRFq2sgkJ+HFERNrqfci45bdhmrUsy\n        7SWw9ybxdFOkuQoyKD3tBmiGfONQMlBaOMWdAsic965rvJsd5zYaZZFI1UwTkFXV\n        KJt3bp3Ngn1vEYXwijGTa+FXz6GLHueJwF0I7ug34DgUkAFvAs8Hacr2DRYxL5RJ\n        XdNgj4Jd2/g6T9InmWT0hASljur+dJnzNiNCkbn9KbX7J/qK1IbR8y560yRmFsU+\n        NdCFTW7wY0Fb1fWJ+/KTsC4=\n        =J6gs\n        -----END PGP PUBLIC KEY BLOCK----- \npackages:\n  - moby-cli\n  - libiothsm-std\n  - moby-engine\nruncmd:\n  - |\n      set -x\n      (\n        # Wait for docker daemon to start\n        while [ $(ps -ef | grep -v grep | grep docker | wc -l) -le 0 ]; do \n          sleep 3\n        done\n\n        # Prevent iotedge from starting before the device connection string is set in config.yaml\n        sudo ln -s /dev/null /etc/systemd/system/iotedge.service\n        apt install iotedge\n        sed -i \"s#\\(device_connection_string: [file://).*%23/1/]\\).*#\\1\\\"', variables('dcs'), '\\\"#g\" /etc/iotedge/config.yaml \n        systemctl unmask iotedge\n        systemctl start iotedge\n      ) &\n'))]",
-
                     "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
-
                 },
-
                 "storageProfile": {
-
                     "imageReference": {
-
                         "publisher": "[variables('imagePublisher')]",
-
                         "offer": "[variables('imageOffer')]",
-
                         "sku": "[parameters('ubuntuOSVersion')]",
-
                         "version": "latest"
-
                     },
-
                     "osDisk": {
-
                         "createOption": "FromImage"
-
                     }
-
                 },
-
                 "networkProfile": {
-
                     "networkInterfaces": [
                         {
-
                             "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
-
                         }
                     ]
-
                 }
-
             },
-
-             "resources": [
-                    {
-                        "name": "config-app",
-                        "type": "Extensions",
-                        "apiVersion": "2019-03-01",
-                        "location": "[parameters('location')]",
-                        "dependsOn": [
-                          "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
-                        ],
-                        "properties": {
-                            "publisher": "Microsoft.Azure.Extensions",
-                            "type": "CustomScript",
-                            "typeHandlerVersion": "2.1",
-                            "autoUpgradeMinorVersion": true,
-                            "protectedSettings": {
-                                //"commandToExecute": "[concat('export KEYVAULTNAME', '=\"', parameters('keyVaultName'), '\"')]"
-                                //"commandToExecute": "[concat('echo KEYVAULTNAME', '=\"', parameters('keyVaultName'), '>> /etc/environment ''\" ')]"
-                                //"commandToExecute": "[concat('\"export KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/.bashrc')]"
-                                //"commandToExecute": "[concat('\"export KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/.bashrc')]",
-                                //"commandToExecute": "[concat('\"sed -i $a KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> /etc/environment')]"
-                                //"commandToExecute": "[concat('echo KEYVAULTNAME', '=\", parameters('keyVaultName'), '\", '>> /etc/environment')]"
-                                "commandToExecute": "[format('echo \"export KEYVAULTNAME={0}\">>/etc/environment', parameters('keyVaultName'))]"
-                            } 
+            "resources": [
+                {
+                    "name": "config-app",
+                    "type": "Extensions",
+                    "apiVersion": "2019-03-01",
+                    "location": "[parameters('location')]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.1",
+                        "autoUpgradeMinorVersion": true,
+                        "protectedSettings": {
+                            //"commandToExecute": "[concat('export KEYVAULTNAME', '=\"', parameters('keyVaultName'), '\"')]"
+                            //"commandToExecute": "[concat('echo KEYVAULTNAME', '=\"', parameters('keyVaultName'), '>> /etc/environment ''\" ')]"
+                            //"commandToExecute": "[concat('\"export KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/.bashrc')]"
+                            //"commandToExecute": "[concat('\"export KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> ~/.bashrc')]",
+                            //"commandToExecute": "[concat('\"sed -i $a KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> /etc/environment')]"
+                            //"commandToExecute": "[concat('echo KEYVAULTNAME', '=\", parameters('keyVaultName'), '\", '>> /etc/environment')]"
+                            "fileUris": [ "https://raw.githubusercontent.com/MSKeith/testGPUDeployment/noncloud-init/config.sh" ],
+                            "commandToExecute": "[concat(format('echo \"export dcs={0}\">>/etc/environment', parameters('deviceConnectionString')), ' && sh cloud-init.sh')]"
                         }
                     }
-                ]
-
-        },
-
-        {
-
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-
-            "name": "[concat(parameters('vmName'),'/ManagedIdentityExtensionForLinux')]",
-
-            "apiVersion": "2018-06-01",
-
-            "location": "[resourceGroup().location]",
-
-            "dependsOn": [
-
-                "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
-
-            ],
-
-            "properties": {
-
-                "publisher": "Microsoft.ManagedIdentity",
-
-                "type": "ManagedIdentityExtensionForLinux",
-
-                "typeHandlerVersion": "1.0",
-
-                "autoUpgradeMinorVersion": true,
-
-                "settings": {
-
-                    "port": 50342
-
                 }
-
-            }
-
+            ]
         },
-
         {
-
-            "type": "Microsoft.KeyVault/vaults",
-
-            "name": "[parameters('keyVaultName')]",
-
-            "apiVersion": "2019-09-01",
-
-            "location": "[parameters('location')]",
-
-            "tags": {},
-
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('vmName'),'/ManagedIdentityExtensionForLinux')]",
+            "apiVersion": "2018-06-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+            ],
             "properties": {
-
+                "publisher": "Microsoft.ManagedIdentity",
+                "type": "ManagedIdentityExtensionForLinux",
+                "typeHandlerVersion": "1.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "port": 50342
+                }
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "name": "[parameters('keyVaultName')]",
+            "apiVersion": "2019-09-01",
+            "location": "[parameters('location')]",
+            "tags": {},
+            "properties": {
                 "sku": {
-
                     "name": "Standard",
-
                     "family": "A"
-
                 },
-
                 "tenantId": "[reference(concat('Microsoft.Compute/virtualMachines/', parameters('vmName')), '2017-03-30', 'Full').identity.tenantId]",
-
                 "enabledForDeployment": "true",
-
                 "enabledForTemplateDeployment": "true",
-
                 "enabledForVolumeEncryption": "true",
 
-
                 "accessPolicies": [
-
                     {
-
                         "tenantId": "[reference(concat('Microsoft.Compute/virtualMachines/', parameters('vmName')), '2017-03-30', 'Full').identity.tenantId]",
-
                         "objectId": "[reference(concat('Microsoft.Compute/virtualMachines/', parameters('vmName')), '2017-03-30', 'Full').identity.principalId]",
-
                         "permissions": {
-
                             "keys": [
-
                                 "all"
-
                             ],
-
                             "secrets": [
-
                                 "all"
-
                             ]
-
                         }
-
                     }
-
                 ],
-
                 "networkAcls": {
-
                     "defaultAction": "Allow",
-
                     "bypass": "AzureServices"
-
                 },
-
                 "dependsOn": [
-
                     "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
-
                 ]
-
             },
-
             "resources": [
-
             ]
-
         },
-
         {
-
             "type": "Microsoft.KeyVault/vaults/secrets",
-
             "name": "[concat(parameters('keyVaultName'), '/', 'deviceConnectionString')]",
-
             "apiVersion": "2018-02-14",
-
             "location": "[parameters('location')]",
-
             "dependsOn": [
-
                 "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
-
             ],
-
             "properties": {
-
                 "value": "[parameters('deviceConnectionString')]"
-
             }
-
         }
-
     ],
-
     "outputs": {
-
         "Public SSH": {
-
             "type": "string",
-
             "value": "[concat('ssh ', reference(resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))).osProfile.adminUsername, '@', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
-
         }
-
     }
-
 }
