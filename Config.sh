@@ -28,4 +28,4 @@ sudo apt install iotedge -y
 echo "installing  IoT Edge"
 sudo sed -i "s#\(device_connection_string: \).*#\1\"$dcs\"#g" /etc/iotedge/config.yaml
 sudo systemctl restart iotedge
-echo "restarting IoT Edge"
+echo "restarting IoT Edge" 

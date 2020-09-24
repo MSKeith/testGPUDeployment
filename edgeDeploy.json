@@ -319,7 +319,7 @@
                             //"commandToExecute": "[concat('\"sed -i $a KEYVAULTNAME', '=', parameters('keyVaultName'), '\" >> /etc/environment')]"
                             //"commandToExecute": "[concat('echo KEYVAULTNAME', '=\", parameters('keyVaultName'), '\", '>> /etc/environment')]"
                             "fileUris": [ "https://raw.githubusercontent.com/MSKeith/testGPUDeployment/noncloud-init/config.sh" ],
-                            "commandToExecute": "[concat(format('echo \"export dcs={0}\">>/etc/environment', parameters('deviceConnectionString')), ' && sh config.sh')]"
+                            "commandToExecute": "[concat(format('echo \"export dcs={0}\">>/etc/environment', parameters('deviceConnectionString')), ' && sh config.sh 1> /out.txt 2>&1')]"
                         }
                     }
                 }
